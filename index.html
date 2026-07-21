@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Empowered Futures Map</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #1f1f1f;
+        }
+
+        .page {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1fr 390px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .map-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .hotspot {
+            position: absolute;
+            left: var(--x);
+            top: var(--y);
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(173, 12, 109, 0.55);
+            background: rgba(236, 173, 225, 0.82);
+            cursor: pointer;
+            padding: 0;
+            z-index: 2;
+            isolation: isolate;
+            box-shadow:
+                0 0 0 3px rgba(236, 173, 225, 0.28),
+                0 0 10px rgba(173, 12, 109, 0.28);
+            animation: dotPulse 2.8s ease-in-out infinite;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .hotspot::after {
+            content: "";
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                    rgba(236, 173, 225, 0.38) 0%,
+                    rgba(236, 173, 225, 0.18) 42%,
+                    rgba(236, 173, 225, 0) 72%);
+            z-index: -1;
+            pointer-events: none;
+            animation: glowPulse 2.8s ease-in-out infinite;
+        }
+
+        .hotspot:hover,
+        .hotspot:focus,
+        .hotspot.active {
+            background: rgba(173, 12, 109, 0.82);
+            border-color: rgba(255, 255, 255, 0.95);
+            box-shadow:
+                0 0 0 3px rgba(255, 255, 255, 0.75),
+                0 0 16px rgba(173, 12, 109, 0.55);
+            outline: none;
+        }
+
+        .hotspot:hover::after,
+        .hotspot:focus::after,
+        .hotspot.active::after {
+            background: radial-gradient(circle,
+                    rgba(173, 12, 109, 0.42) 0%,
+                    rgba(236, 173, 225, 0.26) 42%,
+                    rgba(236, 173, 225, 0) 74%);
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(0.92);
+                opacity: 0.72;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.08);
+                opacity: 1;
+            }
+        }
+
+        @keyframes glowPulse {
+
+            0%,
+            100% {
+                transform: scale(0.82);
+                opacity: 0.35;
+            }
+
+            50% {
+                transform: scale(1.35);
+                opacity: 0.85;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .hotspot,
+            .hotspot::after {
+                animation: none;
+            }
+        }
+
+        .panel {
+            position: sticky;
+            top: 18px;
+            min-height: 30px;
+            padding: 30px;
+            border-radius: 28px;
+            border: 1px solid rgba(173, 12, 109, 0.16);
+            background: linear-gradient(180deg,
+                    rgba(255, 250, 253, 0.98),
+                    rgba(252, 240, 249, 0.94));
+            box-shadow:
+                0 18px 45px rgba(120, 70, 100, 0.12),
+                0 0 0 6px rgba(236, 173, 225, 0.07);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 25px;
+            line-height: 1.15;
+            font-weight: 600;
+        }
+
+        .panel h3 {
+            margin-top: 22px;
+            margin-bottom: 6px;
+            font-size: 16px;
+            line-height: 1.25;
+            font-weight: 600;
+        }
+
+        .panel p {
+            margin-top: 0;
+            font-size: 16px;
+            line-height: 1.42;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <section class="map-container">
+            <img src="Assets/map.jpg"
+                alt="Empowered Futures illustrated map using a river as a metaphor for the life course, showing themes around money, health, family, education, work, identity, community and future wellbeing.">
+
+            <div id="hotspots"></div>
+        </section>
+
+        <aside class="panel" id="panel" aria-live="polite">
+            <h2>Explore the map</h2>
+            <p>
+                Select a marker on the image to open a short reflection connected to the project themes.
+            </p>
+        </aside>
+    </main>
+
+    <script>
+        const reflections = [
+            {
+                x: "4.2%",
+                y: "17%",
+                title: "Talking about money",
+                body: `Money can be difficult to talk about because it carries shame, fear, judgement, faith, family expectations and the risk of seeming like you have failed. In the workshops, safe and trusted spaces helped people realise they were not alone.`,
+                question: `Who would you feel safe talking to about money, and why?`,
+                help: `Peer-led conversations in familiar community spaces.`
+            },
+            {
+                x: "83%",
+                y: "17%",
+                title: "Time as privilege",
+                body: `Time is not equally available. Some people have time to reflect, plan and invest; others are managing care, stress, multiple jobs or survival. Slowing down can itself be a privilege.`,
+                question: `What would become possible if people had more time to think, rest and plan?`,
+                help: `Spaces to pause, reflect and make decisions from rest rather than panic.`
+            },
+
+            {
+
+                x: "7%",
+                y: "41%",
+                title: "Where money stories begin",
+                body: `Our relationship with money often starts at home. Parents, carers, migration histories, care responsibilities and early experiences can shape how people save, spend, worry or plan. Some habits are taught directly; others are absorbed quietly.`,
+                question: `What did you learn about money before anyone formally taught you?`,
+                help: `Financial learning that includes families, not only individuals.`
+            },
+            {
+                x: "11%",
+                y: "67%",
+                title: "Scarcity and survival",
+                body: `Fear around money can come from past insecurity, migration, poverty, housing instability or family trauma. Saving, hoarding or constant worrying may be ways people try to protect themselves from future uncertainty.`,
+                question: `Which money habits began as protection?`,
+                help: `Practical tools combined with compassion for inherited survival strategies.`
+            },
+            {
+                x: "17%",
+                y: "52%",
+                title: "Learning value early",
+                body: `Children learn about money through chores, gifts, family habits, school experiences and what they see adults do. Financial education is not only about numbers; it is also about values, responsibility, delayed gratification and care.`,
+                question: `What should children learn about money before adulthood?`,
+                help: `Practical, age-appropriate learning that uses real-life examples.`
+            },
+            {
+                x: "29%",
+                y: "58%",
+                title: "Education and unequal starting points",
+                body: `Education can open possibilities, but it can also reproduce inequality when some people have access to financial knowledge, paid tools, extra support and safety nets while others do not.`,
+                question: `What knowledge is assumed, but not actually taught?`,
+                help: `Culturally relevant financial education linked to real lives, families and changing digital systems.`
+            },
+            {
+                x: "13%",
+                y: "92%",
+                title: "Digital money and financial traps",
+                body: `Financial systems are changing quickly. Contactless payments, subscriptions, buy-now-pay-later schemes, gaming purchases and fast fashion can make spending feel less visible and more immediate.`,
+                question: `When does convenience become pressure?`,
+                help: `Education that explains modern financial systems, risk and choice without blame.`
+            },
+            {
+                x: "46%",
+                y: "77%",
+                title: "Work, opportunity and health",
+                body: `Access to work is not shaped by individual effort alone. It can be affected by health, migration, race, gender, class, appearance, workplace culture and access to support. Participants reflected on how work can create financial security, but also pressure people to sacrifice health, time or wellbeing.`,
+                question: `What makes work feel like opportunity, and what makes it feel like survival?`,
+                help: `Employment pathways, mentoring, accessible healthcare, better wages and guidance from people with similar lived experience.`
+            },
+            {
+                x: "36%",
+                y: "36%",
+                title: "Faith, culture and money",
+                body: `Faith and cultural values can offer comfort, hope, moral guidance and community support. They can also create pressure around sacrifice, status, success or endurance.`,
+                question: `When does faith or culture support financial wellbeing, and when can it add pressure?`,
+                help: `Trusted conversations in faith and community settings.`
+            },
+            {
+                x: "19.5%",
+                y: "29.5%",
+                title: "Expectations and identity",
+                body: `Money is tied to identity: gender roles, family position, cultural expectations and ideas of respectability. Some people may feel expected to provide, sacrifice, display success or stay silent.`,
+                question: `Whose financial pressure is visible, and whose is hidden?`,
+                help: `Conversations that recognise gender, culture, class and family roles.`
+            },
+            {
+                x: "41%",
+                y: "65%",
+                title: "Systemic inequalities",
+                body: `Financial stress is not only caused by individual choices. It is shaped by wider systems: housing, work, education, healthcare, migration, class, race, gender and access to support. Repeated barriers can start to feel like personal failure, even when the problem is structural.`,
+                question: `When does a system problem start to feel like your own fault?`,
+                help: `Support that recognises unequal starting points.`
+            },
+            {
+                x: "53%",
+                y: "26%",
+                title: "Health is multidimensional",
+                body: `Health is not only physical. It can include mental, emotional, social, spiritual and financial wellbeing. Money affects health, and health affects money.`,
+                question: `What does good health mean beyond simply “not being ill”?`,
+                help: `Financial wellbeing support that is connected to mental health, relationships and daily life.`
+            },
+            {
+                x: "72%",
+                y: "62%",
+                title: "Earning money, protecting health",
+                body: `Participants reflected on the tension between needing to earn and needing to stay well. People may work through stress, illness or exhaustion to stay financially afloat, then pay the cost later physically, mentally or emotionally.`,
+                question: `What does financial stability cost when health is not protected?`,
+                help: `Approaches that include rest, care, mental health and realistic choices.`
+            },
+            {
+                x: "62.5%",
+                y: "49%",
+                title: "Identity and shared knowledge",
+                body: `Financial wellbeing is shaped by identity, culture and lived experience. In the project, shared conversations helped people recognise that money pressures were not only personal, but connected to family, community and wider systems. Knowledge became more powerful when it was exchanged rather than kept private.`,
+                question: `What changes when financial knowledge is shared through lived experience?`,
+                help: `Peer-led learning, community knowledge-sharing and resources that reflect different identities, generations and needs.`
+            },
+            {
+                x: "87%",
+                y: "36%",
+                title: "Community and support",
+                body: `Money can affect where people feel they belong, who they can talk to, and which spaces they feel able to access. The project showed that safe, familiar and trusted community settings can reduce shame, support openness and help people feel less alone.`,
+                question: `What makes a space feel safe enough to talk about money?`,
+                help: `Trusted community spaces, culturally relevant support, peer groups and conversations led by people with shared experience.`
+            },
+            {
+                x: "89%",
+                y: "81%",
+                title: "From survival to thriving",
+                body: `The project moved from managing money towards asking what a healthier financial future could feel like. Participants spoke about confidence, values, investing, family conversations, mental health and planning with more intention.`,
+                question: `What does “enough” mean for you?`,
+                help: `Ongoing workshops, short videos, lived-experience stories and community-based resources.`
+            }
+        ];
+
+        const hotspotsLayer = document.getElementById("hotspots");
+        const panel = document.getElementById("panel");
+
+        function openReflection(item, button) {
+            document.querySelectorAll(".hotspot").forEach(function (hotspot) {
+                hotspot.classList.remove("active");
+                hotspot.setAttribute("aria-pressed", "false");
+            });
+
+            button.classList.add("active");
+            button.setAttribute("aria-pressed", "true");
+
+            panel.innerHTML = `
+        <h2>${item.title}</h2>
+        <p>${item.body}</p>
+
+        <h3>Question</h3>
+        <p>${item.question}</p>
+
+        <h3>What could help?</h3>
+        <p>${item.help}</p>
+      `;
+        }
+
+        reflections.forEach(function (item) {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "hotspot";
+            button.style.setProperty("--x", item.x);
+            button.style.setProperty("--y", item.y);
+            button.setAttribute("aria-label", "Open reflection: " + item.title);
+            button.setAttribute("aria-pressed", "false");
+            button.setAttribute("title", item.title);
+
+            button.addEventListener("click", function () {
+                openReflection(item, button);
+            });
+
+            hotspotsLayer.appendChild(button);
+        });
+    </script>
+</body>
+
+</html>
