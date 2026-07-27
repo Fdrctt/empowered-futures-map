@@ -10,7 +10,7 @@
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Lora, sans-serif;
             background: white;
             color: #1f1f1f;
         }
@@ -166,7 +166,60 @@
             font-size: 16px;
             line-height: 1.42;
         }
+
+        @media (max-width: 900px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            .page {
+                display: block;
+                max-width: none;
+                padding: 12px;
+            }
+
+            .map-container {
+                width: 100%;
+            }
+
+            .map-container img {
+                width: 100%;
+                height: auto;
+            }
+
+            .panel {
+                position: static;
+                margin-top: 18px;
+                width: auto;
+                min-height: 0;
+                padding: 22px;
+                border-radius: 22px;
+            }
+
+            .panel h2 {
+                font-size: 21px;
+            }
+
+            .panel h3 {
+                font-size: 14px;
+            }
+
+            .panel p {
+                font-size: 14px;
+                line-height: 1.38;
+            }
+
+            .hotspot {
+                width: 18px;
+                height: 18px;
+            }
+
+            .hotspot::after {
+                inset: -9px;
+            }
+        }
     </style>
+    
 </head>
 
 <body>
